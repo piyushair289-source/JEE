@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEE 2027 • ENDGAME</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050000;
+            --glass-bg: rgba(25, 5, 5, 0.8);
+            --glass-border: rgba(255, 0, 0, 0.15);
+            --primary: #ff1f1f; 
+            --accent-blue: #0088ff;
+            --danger-gradient: linear-gradient(135deg, #ff0000, #800000);
+            --text-main: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 15% 50%, rgba(255, 0, 0, 0.1), transparent 25%);
+            color: var(--text-main); height: 100vh; padding: 20px; overflow: hidden;
+            position: relative;
+        }
+
+        .dashboard {
+            max-width: 1600px; margin: 0 auto;
+            display: grid; grid-template-columns: 320px 1fr 350px;
+            gap: 20px; height: calc(100vh - 60px); /* Adjusted for footer */
+        }
+
+        .card {
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 28px;
+            padding: 22px; display: flex; flex-direction: column; overflow: hidden;
+            position: relative;
+        }
+
+        .text-danger { background: var(--danger-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
+
+        /* --- CENTER UI --- */
+        .center-card { text-align: center; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 25px; }
+        
+        .command-box { width: 100%; min-height: 140px; display: flex; align-items: center; justify-content: center; margin-top: 10px; }
+        #quoteDisplay { 
+            font-weight: 800; font-size: 1.5rem; line-height: 1.2; text-transform: uppercase;
+            background: linear-gradient(to bottom, #ff4d4d, #800000);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.5));
+        }
+
+        .timer-grid { display: flex; gap: 15px; margin: 15px 0; }
+        .timer-unit { text-align: center; }
+        .timer-unit b { font-size: 1.6rem; display: block; }
+        .timer-unit small { font-size: 0.6rem; opacity: 0.6; text-transform: uppercase; }
+
+        .ring-box { position: relative; width: 130px; height: 130px; margin: 10px 0; }
+        svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .ring-fill { stroke-dasharray: 440; stroke-dashoffset: 440; transition: 1s linear; stroke: var(--primary); }
+
+        /* --- SIDEBARS --- */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-bottom: 10px; }
+        .date-cell { 
+            aspect-ratio: 1; display: grid; place-items: center; border-radius: 10px; 
+            font-size: 0.8rem; cursor: pointer; position: relative; border: 1px solid transparent;
+        }
+        
+        .today-cell { background: var(--danger-gradient) !important; font-weight: 800; color: white !important; }
+        .active-date { border: 1px solid var(--accent-blue) !important; box-shadow: 0 0 10px rgba(0, 136, 255, 0.3); }
+        
+        .past-day::after {
+            content: ""; position: absolute; width: 80%; height: 2px;
+            background: var(--accent-blue); top: 50%; left: 10%;
+            transform: rotate(-15deg); opacity: 0.6;
+        }
+
+        #musicContainer { margin-top: 10px; overflow-y: auto; max-height: 200px; border-radius: 12px; }
+        #musicContainer::-webkit-scrollbar { width: 4px; }
+        #musicContainer::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        .bar-track { height: 8px; background: #220000; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .bar-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.5s ease; box-shadow: 0 0 10px var(--primary); }
+        .todo-input { width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 12px; border-radius: 12px; color: white; outline: none; margin-bottom: 12px; }
+        .todo-list { list-style: none; overflow-y: auto; flex-grow: 1; }
+        .todo-item { background: rgba(255, 0, 0, 0.05); margin-bottom: 6px; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,0,0,0.1); }
+        .check { width: 18px; height: 18px; border: 2px solid #444; border-radius: 4px; cursor: pointer; }
+        .is-done { background: var(--primary); border-color: transparent; }
+        .del-btn { color: #555; cursor: pointer; font-size: 0.8rem; padding: 5px; margin-left: auto; }
+
+        /* FOOTER SIGNATURE */
+        .footer-sig {
+            position: absolute; bottom: 15px; right: 25px;
+            font-size: 0.65rem; color: #444; letter-spacing: 1px;
+            text-transform: uppercase; font-weight: 600;
+        }
+        .footer-sig a { color: var(--primary); text-decoration: none; border-bottom: 1px solid transparent; transition: 0.3s; }
+        .footer-sig a:hover { border-color: var(--primary); opacity: 0.8; }
+
+        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; place-items: center; }
+        .modal-box { background: #150505; padding: 30px; border-radius: 28px; border: 1px solid var(--primary); width: 380px; position: relative; }
+    </style>
+</head>
+<body>
+
+<div id="modal">
+    <div class="modal-box">
+        <span onclick="document.getElementById('modal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer; color:red;">CLOSE ✖</span>
+        <h2 class="text-danger">SYSTEM CONFIG</h2><br>
+        <label style="font-size: 0.7rem; opacity: 0.6;">EXAM DATE</label>
+        <input type="datetime-local" id="setT" style="width:100%; padding:10px; background:#220000; border:1px solid #440000; color:white; border-radius:10px; margin: 5px 0 15px 0;">
+        <label style="font-size: 0.7rem; opacity: 0.6;">SPOTIFY LINK</label>
+        <input type="text" id="setS" placeholder="Spotify URL..." style="width:100%; padding:10px; background:#220000; border:1px solid #440000; color:white; border-radius:10px; margin-bottom:20px;">
+        <button onclick="saveSet()" style="width:100%; padding:12px; background:var(--danger-gradient); border:none; border-radius:10px; color:white; font-weight:800; cursor:pointer;">SAVE CHANGES</button>
+    </div>
+</div>
+
+<div class="dashboard">
+    <div class="card">
+        <h3 style="color:var(--primary); font-size:0.6rem; letter-spacing:2px; margin-bottom:10px;">DISCIPLINE CALENDAR</h3>
+        <div id="monthTitle" style="font-weight:800; margin-bottom:10px;"></div>
+        <div class="calendar-grid" id="calGrid"></div>
+        <div id="musicContainer"></div>
+        <button style="margin-top:auto; padding:10px; background:rgba(255,0,0,0.1); border:1px solid var(--primary); color:white; border-radius:12px; cursor:pointer; font-size:0.7rem; font-weight:800;" onclick="toggleMusic()">🎵 FOCUS AUDIO</button>
+    </div>
+
+    <div class="card center-card">
+        <div style="position:absolute; top:25px; right:25px; cursor:pointer; opacity:0.5; font-size: 1.2rem;" onclick="document.getElementById('modal').style.display='grid'">⚙</div>
+        <h1 class="text-danger" style="font-size:2.5rem; line-height:1;">JEE 2027<br>ENDGAME</h1>
+        
+        <div style="background: rgba(255,0,0,0.1); border: 1px solid var(--primary); padding: 10px 25px; border-radius: 15px;">
+            <span id="totalDays" style="font-size:2rem; font-weight:800;">000</span>
+            <p style="font-size: 0.6rem; font-weight: 800; color: var(--primary);">DAYS UNTIL FATE</p>
+        </div>
+
+        <div class="timer-grid">
+            <div class="timer-unit"><b id="cd-mo" class="text-danger">00</b><small>Mon</small></div>
+            <div class="timer-unit"><b id="cd-da" class="text-danger">00</b><small>Days</small></div>
+            <div class="timer-unit"><b id="cd-hr" class="text-danger">00</b><small>Hrs</small></div>
+            <div class="timer-unit"><b id="cd-sec" style="color:white;">00</b><small>Sec</small></div>
+        </div>
+
+        <div class="ring-box">
+            <svg><circle cx="65" cy="65" r="60" fill="none" stroke="rgba(255,0,0,0.05)" stroke-width="8"></circle><circle id="ring" cx="65" cy="65" r="60" fill="none" stroke-width="8" class="ring-fill" stroke-linecap="round"></circle></svg>
+            <div style="position:absolute; inset:0; display:grid; place-items:center;"><span id="pct" class="text-danger" style="font-size:1.8rem;">0%</span></div>
+        </div>
+
+        <div class="command-box"><p id="quoteDisplay">INITIALIZING...</p></div>
+    </div>
+
+    <div class="card">
+        <div style="text-align:right;">
+            <h1 id="clock" class="text-danger" style="font-size:3rem;">00:00</h1>
+            <p id="liveDay" style="font-size:0.8rem; font-weight:600;"></p>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:0.6rem; font-weight:800; color:var(--primary);">
+                <span>MISSION SUCCESS RATE</span><span id="taskStats">0/0</span>
+            </div>
+            <div class="bar-track"><div id="taskBar" class="bar-fill"></div></div>
+        </div>
+
+        <h3 style="color:var(--primary); font-size:0.6rem; margin-bottom:10px;">COMMANDS • <span id="taskDateDisplay">Today</span></h3>
+        <input type="text" class="todo-input" id="todoInp" placeholder="Enter objective...">
+        <ul class="todo-list" id="todoList"></ul>
+    </div>
+</div>
+
+<div class="footer-sig">
+    Made by <a href="https://your-webpage-link.com" target="_blank">Piyush Patil</a> for JEE Aspirants
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('jee_endgame_v3')) || {
+        target: "2027-05-17T09:00", start: "2025-01-01", spotify: "", tasks: {}
+    };
+
+    const quotes = ["While you are 'finding yourself,' someone else is finding x and taking your seat.", "Mummy-Papa ki umeedon ko 'Backlog' ke niche daba rahe ho?", "IIT Bombay ka sapna aur 10 minute ka attention span?", "Duniya badal rahi hai, aur tum abhi bhi wahi purani 'Strategy Video' dekh rahe ho.", "Log puchenge 'Beta kya hua?' Result ke din wala bahana nahi chalega."];
+
+    const getTodayK = () => new Date().toLocaleDateString('en-CA'); 
+    let activeK = getTodayK();
+
+    function save() { localStorage.setItem('jee_endgame_v3', JSON.stringify(db)); }
+    function saveSet() { db.target = document.getElementById('setT').value; db.spotify = document.getElementById('setS').value; save(); location.reload(); }
+
+    function toggleMusic() {
+        const mc = document.getElementById('musicContainer');
+        mc.innerHTML = mc.innerHTML ? "" : `<iframe src="${db.spotify}" width="100%" height="350" frameborder="0" allow="encrypted-media"></iframe>`;
+    }
+
+    function renderCal() {
+        const grid = document.getElementById('calGrid'); grid.innerHTML = "";
+        const now = new Date();
+        const todayStr = getTodayK();
+        document.getElementById('monthTitle').innerText = now.toLocaleString('default',{month:'long',year:'numeric'});
+        
+        ['M','T','W','T','F','S','S'].forEach(d => grid.innerHTML += `<div style="opacity:0.3; color:red; font-size:0.6rem;">${d}</div>`);
+        
+        const offset = new Date(now.getFullYear(), now.getMonth(), 1).getDay() || 7;
+        for(let i=1; i<offset; i++) grid.innerHTML += `<div></div>`;
+        
+        for(let d=1; d<=new Date(now.getFullYear(), now.getMonth()+1, 0).getDate(); d++) {
+            let dateObj = new Date(now.getFullYear(), now.getMonth(), d);
+            let k = dateObj.toLocaleDateString('en-CA');
+            let isPast = dateObj < new Date().setHours(0,0,0,0);
+            let isToday = k === todayStr;
+            let isSelected = k === activeK;
+            
+            grid.innerHTML += `<div class="date-cell ${isToday?'today-cell':''} ${isPast?'past-day':''} ${isSelected?'active-date':''}" onclick="selDate('${k}')">${d}</div>`;
+        }
+    }
+
+    function selDate(k) {
+        activeK = k;
+        const todayStr = getTodayK();
+        document.getElementById('taskDateDisplay').innerText = (k === todayStr) ? "Today" : k;
+        renderTasks();
+        renderCal();
+    }
+
+    document.getElementById('todoInp').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter' && e.target.value.trim()) {
+            if(!db.tasks[activeK]) db.tasks[activeK] = [];
+            db.tasks[activeK].push({ text: e.target.value.trim(), done: false });
+            e.target.value = ""; save(); renderTasks();
+        }
+    });
+
+    function renderTasks() {
+        const l = document.getElementById('todoList'); l.innerHTML = "";
+        let items = db.tasks[activeK] || [], done = items.filter(t => t.done).length;
+        items.forEach((t, i) => {
+            l.innerHTML += `
+                <li class="todo-item">
+                    <div class="check ${t.done?'is-done':''}" onclick="tog(${i})"></div>
+                    <span style="flex:1; ${t.done?'text-decoration:line-through; opacity:0.4':''}">${t.text}</span>
+                    <div class="del-btn" onclick="delTask(${i})">✖</div>
+                </li>`;
+        });
+        document.getElementById('taskBar').style.width = items.length === 0 ? "0%" : (done/items.length)*100 + "%";
+        document.getElementById('taskStats').innerText = `${done}/${items.length}`;
+    }
+
+    function tog(i) { db.tasks[activeK][i].done = !db.tasks[activeK][i].done; save(); renderTasks(); }
+    function delTask(i) { db.tasks[activeK].splice(i, 1); save(); renderTasks(); }
+
+    function loop() {
+        const now = new Date();
+        document.getElementById('clock').innerHTML = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        document.getElementById('liveDay').innerText = now.toLocaleDateString('default', {weekday:'long', month:'short', day:'numeric'});
+        
+        const target = new Date(db.target), diff = target - now;
+        if(diff > 0) {
+            document.getElementById('totalDays').innerText = Math.floor(diff / (1000*60*60*24));
+            document.getElementById('cd-mo').innerText = Math.floor(diff / (1000*60*60*24*30));
+            document.getElementById('cd-da').innerText = Math.floor((diff / (1000*60*60*24)) % 30);
+            document.getElementById('cd-hr').innerText = Math.floor((diff / (1000*60*60)) % 24);
+            document.getElementById('cd-sec').innerText = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+            
+            let pct = Math.min(100, Math.max(0, ((now - new Date(db.start)) / (target - new Date(db.start))) * 100));
+            document.getElementById('pct').innerText = Math.floor(pct) + "%";
+            document.getElementById('ring').style.strokeDashoffset = 440 - (pct / 100 * 440);
+        }
+        
+        if(now.getSeconds() % 3 === 0 && now.getMilliseconds() < 1000) {
+            document.getElementById('quoteDisplay').innerText = quotes[Math.floor(Math.random()*quotes.length)];
+        }
+    }
+
+    renderCal(); renderTasks(); setInterval(loop, 1000);
+</script>
+</body>
+</html>

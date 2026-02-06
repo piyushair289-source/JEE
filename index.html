@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JEE 2027: OPERATION ENDGAME v2.0</title>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,600;0,700;1,700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>JEE 2027: OPERATION ENDGAME v3.4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -13,6 +12,7 @@
             --card-bg: #0b0b0b;
             --card-border: #1f1f1f;
             --primary-red: #ff1e1e;
+            --primary-green: #00ff41;
             --primary-dim: #5a0b0b;
             --text-main: #e0e0e0;
             --text-muted: #555555;
@@ -34,7 +34,6 @@
             padding: 20px;
         }
 
-        /* LAYOUT */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 320px 1fr 320px;
@@ -45,7 +44,6 @@
             height: 95vh;
         }
 
-        /* CARD STYLES */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -66,167 +64,172 @@
             margin-bottom: 15px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            width: 100%;
         }
-        .section-label::before { content: '•'; font-size: 1.2rem; line-height: 0; }
 
-        /* LEFT COLUMN */
+        /* --- LEFT COLUMN --- */
         .col-left { display: flex; flex-direction: column; gap: 20px; }
+
+        /* Calendar */
         .calendar-card { flex: 1; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .cal-month { font-weight: 700; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; }
         .cal-nav { background: none; border: 1px solid var(--card-border); color: var(--primary-red); padding: 5px 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .cal-nav:hover { background: var(--primary-red); color: black; }
-
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
         .cal-day-name { color: var(--primary-red); font-size: 0.7rem; margin-bottom: 10px; font-weight: bold; }
-        .cal-day { font-size: 0.9rem; color: var(--text-muted); padding: 8px 0; border-radius: 6px; position: relative; font-family: var(--font-mono); }
+        
+        .cal-day { 
+            font-size: 0.9rem; color: var(--text-muted); padding: 8px 0; border-radius: 6px; 
+            font-family: var(--font-mono); cursor: pointer; transition: 0.2s; border: 1px solid transparent;
+        }
+        .cal-day:hover { border-color: #333; }
         .cal-day.active { color: white; }
-        .cal-day.today { background: var(--primary-red); color: white; font-weight: bold; box-shadow: 0 0 10px var(--primary-red); }
-        .cal-day.past { text-decoration: line-through; color: #333; }
+        .cal-day.today { background: #222; color: var(--primary-red); font-weight: bold; border: 1px solid var(--primary-red); }
+        .cal-day.past { text-decoration: line-through; color: #333; pointer-events: none; }
+        .cal-day.selected { background: var(--primary-red); color: black; font-weight: bold; box-shadow: 0 0 15px var(--primary-red); }
 
-        .audio-card { height: 280px; justify-content: space-between; }
-        .spotify-frame { border-radius: 12px; overflow: hidden; height: 152px; border: 1px solid #333; background: #000; }
-        .sever-btn {
-            margin-top: 15px; background: transparent; border: 1px solid var(--primary-dim); color: var(--primary-red);
-            padding: 12px; border-radius: 12px; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 2px;
-            text-transform: uppercase; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
+        /* Audio (Persistent) */
+        .audio-card { min-height: 200px; justify-content: flex-start; gap: 10px; }
+        .toggle-deck-btn {
+            background: #111; border: 1px solid var(--primary-red); color: white;
+            padding: 10px; width: 100%; text-transform: uppercase; font-family: var(--font-mono);
+            cursor: pointer; letter-spacing: 2px; border-radius: 8px; font-size: 0.8rem;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .sever-btn:hover { border-color: var(--primary-red); box-shadow: 0 0 15px rgba(255, 30, 30, 0.2); }
+        .toggle-deck-btn:hover { background: var(--primary-dim); }
 
-        /* CENTER COLUMN */
-        .col-center { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: relative; }
-        .op-title {
-            font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 4px; color: var(--primary-red);
-            border: 1px solid var(--primary-dim); padding: 8px 20px; border-radius: 20px; margin-bottom: 20px; background: rgba(255, 30, 30, 0.05);
+        /* CSS Transition for Hiding/Showing without resetting */
+        .spotify-wrapper { 
+            max-height: 0; opacity: 0; overflow: hidden; 
+            transition: all 0.5s ease; 
+            display: flex; flex-direction: column; gap: 10px; 
         }
+        .spotify-wrapper.open { max-height: 300px; opacity: 1; margin-top: 10px; }
+        
+        .spotify-frame { border-radius: 12px; overflow: hidden; height: 152px; border: 1px solid #333; background: #000; flex-shrink: 0;}
+        .playlist-control { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 10px; border-radius: 12px; border: 1px solid #222; }
+        .pl-label { font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 1px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .4s; border-radius: 4px; border: 1px solid #444; }
+        input:checked + .slider { background-color: var(--primary-dim); border-color: var(--primary-red); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: var(--primary-red); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .4s; border-radius: 2px; }
+        .config-btn { margin-top: auto; background: transparent; border: 1px solid #333; color: #777; padding: 8px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; width: 100%; }
+        .config-btn:hover { border-color: var(--primary-red); color: var(--primary-red); }
+
+        /* --- CENTER COLUMN --- */
+        .col-center { justify-content: center; align-items: center; text-align: center; }
+        .op-title { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 4px; color: var(--primary-red); border: 1px solid var(--primary-dim); padding: 8px 20px; border-radius: 20px; margin-bottom: 20px; background: rgba(255, 30, 30, 0.05); }
+        
+        /* UPDATED MAIN TITLE */
         .main-title {
             font-size: 4.5rem; font-weight: 800; font-style: italic;
-            background: linear-gradient(180deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            line-height: 1; margin-bottom: 40px; text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            background: linear-gradient(180deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            line-height: 1; margin-bottom: 40px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
         }
-        .main-title span { color: var(--primary-red); -webkit-text-fill-color: var(--primary-red); text-shadow: 0 0 20px var(--primary-red); }
-
+        .main-title span { 
+            color: var(--primary-red); -webkit-text-fill-color: var(--primary-red); 
+            text-shadow: 0 0 20px var(--primary-red);
+            display: inline-flex; align-items: center; gap: 15px; 
+        }
+        
         .stats-row { display: flex; gap: 20px; width: 100%; margin-bottom: 40px; }
-        .stat-box { 
-            flex: 1; border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; 
-            background: linear-gradient(145deg, #0e0e0e, #080808); position: relative; overflow: hidden;
-        }
+        .stat-box { flex: 1; border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; background: linear-gradient(145deg, #0e0e0e, #080808); position: relative; overflow: hidden; }
         .stat-box::after { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary-red); }
-        .stat-label { font-size: 0.7rem; font-family: var(--font-mono); letter-spacing: 2px; color: var(--text-muted); margin-bottom: 10px; display: block; }
         .stat-val { font-size: 2.5rem; font-weight: 700; color: white; }
-        .stat-val span { font-size: 1rem; color: var(--text-muted); font-weight: 400; margin-left: 5px; }
-        .stat-val.red { color: var(--primary-red); text-shadow: 0 0 10px rgba(255, 30, 30, 0.4); }
-
+        .stat-val span { font-size: 1rem; color: var(--text-muted); }
+        .stat-label { font-size: 0.7rem; font-family: var(--font-mono); letter-spacing: 2px; color: var(--text-muted); display: block; margin-bottom: 10px; }
+        
         .progress-container { width: 100%; margin-bottom: 40px; text-align: left; }
-        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 2px; color: var(--text-muted); }
-        .progress-track { width: 100%; height: 8px; background: #1a1a1a; border-radius: 4px; overflow: hidden; position: relative; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #5a0b0b, var(--primary-red)); width: 0%; box-shadow: 0 0 15px var(--primary-red); transition: width 1s ease; }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); }
+        .progress-track { width: 100%; height: 8px; background: #1a1a1a; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #5a0b0b, var(--primary-red)); width: 0%; box-shadow: 0 0 15px var(--primary-red); }
 
         .countdown-grid { display: flex; gap: 40px; margin-bottom: 50px; }
         .cd-unit { display: flex; flex-direction: column; align-items: center; }
-        .cd-num { font-size: 3rem; font-weight: 700; color: var(--primary-red); line-height: 1; text-shadow: 0 0 15px rgba(255, 30, 30, 0.3); }
+        .cd-num { font-size: 3rem; font-weight: 700; color: var(--primary-red); line-height: 1; }
         .cd-lbl { font-size: 0.7rem; font-family: var(--font-mono); letter-spacing: 3px; color: var(--text-muted); margin-top: 5px; }
 
-        .quote-box { border: 1px solid var(--primary-dim); border-radius: 16px; padding: 25px; width: 100%; background: rgba(10, 10, 10, 0.5); }
-        .quote-text { font-style: italic; font-size: 1.1rem; color: #fff; margin-bottom: 10px; }
+        .quote-box { border: 1px solid var(--primary-dim); border-radius: 16px; padding: 25px; width: 100%; background: rgba(10, 10, 10, 0.5); min-height: 120px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .quote-text { font-style: italic; font-size: 1.1rem; color: #fff; margin: 0; transition: opacity 0.5s ease-in-out; }
         .quote-text span { color: var(--primary-red); font-weight: 700; }
 
-        .settings-icon { position: absolute; top: 20px; right: 20px; color: var(--text-muted); cursor: pointer; transition: 0.3s; }
-        .settings-icon:hover { color: var(--primary-red); transform: rotate(90deg); }
-
-        /* RIGHT COLUMN */
+        /* --- RIGHT COLUMN --- */
         .col-right { display: flex; flex-direction: column; gap: 20px; }
-        
-        /* Clock */
+
         .clock-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #222; }
         .big-time { font-size: 3.5rem; font-weight: 800; line-height: 0.8; letter-spacing: -2px; }
         .date-str { font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8rem; letter-spacing: 2px; margin-top: 10px; display: block; }
+        
         .status-dot { width: 10px; height: 10px; background: var(--primary-red); border-radius: 50%; box-shadow: 0 0 10px var(--primary-red); animation: pulse 2s infinite; display: inline-block; margin-right: 8px; }
+        .status-dot.large { width: 16px; height: 16px; margin: 0; box-shadow: 0 0 20px var(--primary-red); position: relative; top: -4px; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         /* Tasks */
-        .tasks-card { flex: 1; }
-        .task-input-box {
-            background: #111; border: 1px solid #333; border-radius: 12px; padding: 5px; display: flex; margin-bottom: 20px;
-            gap: 5px;
-        }
+        .tasks-card { flex: 1; display: flex; flex-direction: column; }
+        .task-date-display { font-family: var(--font-mono); font-size: 0.7rem; color: var(--primary-red); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; }
+        .task-input-box { background: #111; border: 1px solid #333; border-radius: 12px; padding: 5px; display: flex; margin-bottom: 15px; gap: 5px; }
         .task-input { flex: 1; background: none; border: none; color: white; padding: 10px; outline: none; font-family: var(--font-mono); font-size: 0.9rem; }
-        
-        /* Date Input Styling */
-        .date-input {
-            background: #1a1a1a; border: 1px solid #333; color: var(--text-muted); 
-            border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem;
-            width: 40px; text-align: center; cursor: pointer; padding: 5px;
-            position: relative;
-        }
-        .date-input::-webkit-calendar-picker-indicator {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: auto; height: auto;
-            color: transparent; background: transparent; cursor: pointer;
-        }
-        .date-input::before {
-            content: '\f073'; font-family: "Font Awesome 6 Free"; font-weight: 900;
-            color: var(--text-muted); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
-        .date-input:hover { background: #222; border-color: var(--primary-dim); }
-
         .add-task-btn { background: none; border: none; color: var(--primary-dim); cursor: pointer; padding: 0 15px; transition: 0.2s; }
         .add-task-btn:hover { color: var(--primary-red); }
 
-        .task-list { list-style: none; height: 250px; overflow-y: auto; }
-        .task-item { 
-            display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #1a1a1a; transition: 0.2s; 
-            font-family: var(--font-mono); font-size: 0.85rem; color: #aaa;
-        }
-        .task-item:hover { background: #111; color: white; }
-        .task-check { width: 16px; height: 16px; border: 2px solid #444; margin-right: 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
+        .task-list { list-style: none; height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .task-item { display: flex; flex-direction: column; padding: 12px; border: 1px solid #1a1a1a; border-radius: 8px; background: #0e0e0e; transition: all 0.3s; }
+        .task-item.priority-high { border: 1px solid var(--primary-red); box-shadow: 0 0 5px rgba(255, 30, 30, 0.2); }
+        .task-item.priority-low { border: 1px solid var(--primary-green); box-shadow: 0 0 5px rgba(0, 255, 65, 0.2); }
+        .task-row-main { display: flex; align-items: center; width: 100%; }
+        .task-text { font-family: var(--font-mono); font-size: 0.85rem; color: #e0e0e0; flex: 1; }
+        .task-check { width: 18px; height: 18px; border: 2px solid #444; margin-right: 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .task-item.done .task-check { border-color: var(--primary-red); background: var(--primary-red); }
-        .task-item.done span { text-decoration: line-through; color: #444; }
-        .task-date { font-size: 0.65rem; color: var(--primary-red); border: 1px solid #333; padding: 2px 6px; border-radius: 4px; margin-left: 10px; white-space: nowrap; }
-        .task-del { margin-left: auto; color: #333; cursor: pointer; }
+        .task-item.done .task-text { text-decoration: line-through; color: #444; }
+        .task-meta { display: flex; justify-content: space-between; width: 100%; margin-top: 5px; padding-left: 32px; font-size: 0.65rem; font-family: var(--font-mono); color: #555; }
+        .task-del { color: #333; cursor: pointer; margin-left: 10px; }
         .task-del:hover { color: var(--primary-red); }
 
-        /* Focus Overclock */
-        .focus-card { text-align: center; border-top: 2px solid var(--primary-dim); padding-bottom: 10px; }
+        /* Focus */
+        .focus-card { text-align: center; border-top: 2px solid var(--primary-dim); }
         .focus-timer { font-size: 4rem; font-weight: 700; color: var(--primary-red); text-shadow: 0 0 20px rgba(255, 30, 30, 0.2); line-height: 1; margin: 15px 0; font-family: 'JetBrains Mono'; }
-        
-        .focus-controls-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        }
-        .focus-btn {
-            background: #111; border: 1px solid #333; color: var(--text-muted); padding: 12px 0; border-radius: 8px; 
-            font-family: var(--font-mono); text-transform: uppercase; cursor: pointer; transition: 0.3s;
-            font-size: 0.8rem; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .focus-btn:hover { background: #1a1a1a; color: white; border-color: #555; }
-        .focus-btn.start { border-color: var(--primary-dim); color: var(--primary-red); }
-        .focus-btn.start:hover { background: var(--primary-red); color: white; }
-        
+        .focus-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; justify-content: center; }
+        .focus-btn { background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-family: var(--font-mono); text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.7rem; letter-spacing: 1px; }
+        .focus-btn:hover { border-color: var(--primary-red); color: var(--primary-red); }
+
+        .arch-credit { position: absolute; bottom: 10px; width: 100%; text-align: center; font-family: var(--font-mono); font-size: 0.6rem; color: #333; letter-spacing: 4px; text-transform: uppercase; }
+
         /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 999;
-        }
-        .modal-box { background: #111; border: 1px solid var(--primary-red); padding: 40px; width: 400px; border-radius: 20px; box-shadow: 0 0 50px rgba(255, 30, 30, 0.2); }
-        .modal-title { color: white; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; }
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.8rem; margin-bottom: 8px; }
-        .input-field { width: 100%; background: #050505; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; font-family: var(--font-mono); outline: none; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .modal-box { background: #111; border: 1px solid var(--primary-red); padding: 40px; width: 450px; border-radius: 20px; box-shadow: 0 0 50px rgba(255, 30, 30, 0.2); }
+        .modal-title { color: white; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; font-weight: bold; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.8rem; margin-bottom: 5px; }
+        .input-field { width: 100%; background: #050505; border: 1px solid #333; padding: 10px; color: white; border-radius: 8px; font-family: var(--font-mono); outline: none; }
+        .input-field:focus { border-color: var(--primary-red); }
         .save-btn { width: 100%; background: var(--primary-red); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
 
         @media (max-width: 1000px) {
             body { height: auto; overflow-y: auto; }
-            .dashboard-grid { grid-template-columns: 1fr; height: auto; padding-bottom: 50px; }
+            .dashboard-grid { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; padding-bottom: 50px; }
+            .col-left, .col-center, .col-right { width: 100%; }
         }
     </style>
 </head>
 <body>
 
+    <!-- AUDIO ASSETS -->
+    <audio id="soundCock" src="https://www.soundjay.com/nature/sounds/rooster-cry-1.mp3"></audio>
+    <audio id="soundBell" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+
     <div class="dashboard-grid">
-        <!-- LEFT: Calendar & Audio -->
+        
+        <!-- LEFT COLUMN -->
         <div class="col-left">
             <div class="card calendar-card">
-                <div class="section-label">CHRONICLE HUB</div>
+                <div class="section-label"><span>CALENDER</span></div>
                 <div class="cal-header">
                     <button class="cal-nav" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
                     <span class="cal-month" id="calMonth">FEBRUARY 2026</span>
@@ -239,18 +242,35 @@
             </div>
 
             <div class="card audio-card">
-                <div class="section-label">AUDIO UPLINK</div>
-                <div id="spotifyEmbed" class="spotify-frame"></div>
-                <button class="sever-btn" onclick="openSettings()"><i class="fas fa-bolt"></i> Reconfigure</button>
+                <div class="section-label">
+                    <span>AUDIO UPLINK</span>
+                    <i class="fas fa-signal" style="color:var(--primary-red)"></i>
+                </div>
+                <button class="toggle-deck-btn" onclick="toggleSpotify()"><span><i class="fas fa-headphones"></i> SPOTIFY DECK</span><i class="fas fa-caret-down" id="deckIcon"></i></button>
+                <div class="spotify-wrapper" id="spotifyWrapper">
+                    <div id="spotifyEmbed" class="spotify-frame"></div>
+                    <div class="playlist-control">
+                        <span class="pl-label">FREQ A</span>
+                        <label class="switch"><input type="checkbox" id="playlistToggle" onchange="togglePlaylist()"><span class="slider"></span></label>
+                        <span class="pl-label">FREQ B</span>
+                    </div>
+                </div>
+                <button class="config-btn" onclick="openSettings()"><i class="fas fa-cog"></i> SYSTEM CONFIG</button>
             </div>
         </div>
 
-        <!-- CENTER: Timer & Stats -->
+        <!-- CENTER COLUMN -->
         <div class="col-center card">
-            <i class="fas fa-cog settings-icon" onclick="openSettings()"></i>
+            <div class="op-title">OPERATION IITB</div>
             
-            <div class="op-title">OPERATION ENDGAME</div>
-            <h1 class="main-title">JEE <span>2027</span></h1>
+            <h1 class="main-title">
+                JEE 
+                <span>
+                    <span class="status-dot large"></span> 
+                    2027 IIT BOMBAY 
+                    <span class="status-dot large"></span>
+                </span>
+            </h1>
 
             <div class="stats-row">
                 <div class="stat-box">
@@ -278,11 +298,10 @@
             <div class="quote-box">
                 <p class="quote-text" id="quoteText">"The only person you are destined to become is the <span>person you decide to be.</span>"</p>
             </div>
-            
-            <div style="position: absolute; bottom: 10px; font-size: 0.6rem; letter-spacing: 4px; color: #333;">JEE ENDGAME V2.0</div>
+            <div class="arch-credit">ARCHITECTED BY YOU • JEE ENDGAME V3.4</div>
         </div>
 
-        <!-- RIGHT: Tasks & Pomodoro -->
+        <!-- RIGHT COLUMN -->
         <div class="col-right">
             <div class="card tasks-card">
                 <div class="clock-header">
@@ -290,13 +309,20 @@
                         <div class="big-time" id="clockTime">00:00</div>
                         <span class="date-str"><span class="status-dot"></span><span id="clockDate">WEDNESDAY</span></span>
                     </div>
-                    <div class="section-label" style="margin:0;">MISSION LOAD <span id="taskCount" style="margin-left:10px; color:white;">0/0</span></div>
+                    <div class="section-label" style="margin:0; flex-direction: column; align-items: flex-end;">
+                        <span>MISSION LOG</span>
+                        <span id="taskCount" style="color:white; margin-top:5px;">0/0</span>
+                    </div>
+                </div>
+
+                <div class="task-date-display">
+                    <span>TARGETING:</span>
+                    <span id="selectedDateDisplay" style="color:white;">NO DATE SELECTED</span>
                 </div>
 
                 <div class="task-input-box">
-                    <input type="text" id="taskInput" class="task-input" placeholder="ASSIGN OBJECTIVE...">
-                    <input type="date" id="taskDateInput" class="date-input" title="Set Deadline">
-                    <button class="add-task-btn" onclick="addTask()"><i class="fas fa-bolt"></i></button>
+                    <input type="text" id="taskInput" class="task-input" placeholder="TASK (H) for High, (L) for Low...">
+                    <button class="add-task-btn" onclick="addTask()"><i class="fas fa-plus"></i></button>
                 </div>
 
                 <ul class="task-list" id="taskList"></ul>
@@ -305,11 +331,9 @@
             <div class="card focus-card">
                 <div class="section-label" style="justify-content: center;">FOCUS OVERCLOCK</div>
                 <div class="focus-timer" id="timerDisplay">25 00</div>
-                
-                <div class="focus-controls-grid">
-                    <button class="focus-btn start" onclick="startTimer()"><i class="fas fa-play"></i> START</button>
-                    <button class="focus-btn" onclick="pauseTimer()"><i class="fas fa-pause"></i> STOP</button>
-                    <button class="focus-btn" onclick="setBreak()"><i class="fas fa-mug-hot"></i> BREAK</button>
+                <div class="focus-controls">
+                    <button class="focus-btn" onclick="toggleTimer()" id="timerBtn"><i class="fas fa-play"></i> START</button>
+                    <button class="focus-btn" onclick="startBreak()"><i class="fas fa-coffee"></i> BREAK</button>
                     <button class="focus-btn" onclick="resetTimer()"><i class="fas fa-undo"></i> RESET</button>
                 </div>
             </div>
@@ -320,206 +344,333 @@
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-box">
             <div class="modal-title">System Config</div>
-            <div class="input-group"><label>Target Date</label><input type="date" id="confDate" class="input-field"></div>
-            <div class="input-group"><label>Spotify Playlist</label><input type="text" id="confSpotify" class="input-field"></div>
-            <button class="save-btn" onclick="saveSettings()">Initialize</button>
-            <button style="background:transparent; border:none; color:#555; width:100%; margin-top:10px; cursor:pointer;" onclick="closeSettings()">Cancel</button>
+            <div class="input-group"><label>Target Date (JEE 2027)</label><input type="date" id="confDate" class="input-field"></div>
+            <div class="input-group"><label>Playlist A (Primary)</label><input type="text" id="confPlaylist1" class="input-field"></div>
+            <div class="input-group"><label>Playlist B (Secondary)</label><input type="text" id="confPlaylist2" class="input-field"></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="input-group"><label>Focus (Mins)</label><input type="number" id="confFocusTime" class="input-field" placeholder="25"></div>
+                <div class="input-group"><label>Break (Mins)</label><input type="number" id="confBreakTime" class="input-field" placeholder="5"></div>
+            </div>
+            <button class="save-btn" onclick="saveSettings()">INITIALIZE</button>
+            <button style="background:transparent; border:none; color:#555; width:100%; margin-top:10px; cursor:pointer;" onclick="closeSettings()">CLOSE</button>
         </div>
     </div>
 
     <script>
-        // --- CONFIG ---
+        // --- SPACEBAR LISTENER ---
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                // Prevent scrolling when pressing space
+                if(document.activeElement.tagName === 'INPUT') return; 
+                event.preventDefault();
+                
+                // toggleTimer() acts as the global Pause/Play for the session
+                toggleTimer();
+            }
+        });
+
         const defaultState = {
             targetDate: "2027-01-20T09:00:00",
             startDate: "2025-01-01T00:00:00",
-            spotifyUrl: "https://open.spotify.com/playlist/0vvXsWCC9xrXsKd4FyS8kM",
+            playlists: ["https://open.spotify.com/playlist/0vvXsWCC9xrXsKd4FyS8kM", "https://open.spotify.com/playlist/37i9dQZF1DX8Uebhn9wzrS"],
+            currentPlaylist: 0,
+            focusDuration: 25,
+            breakDuration: 5,
             tasks: []
         };
         let state = JSON.parse(localStorage.getItem('jeeEndgameConfig')) || defaultState;
+        if(!state.focusDuration) state.focusDuration = 25;
+        if(!state.breakDuration) state.breakDuration = 5;
 
-        // --- CLOCK ---
+        let currentSelectedDate = null; 
+
         function updateClock() {
             const now = new Date();
-            document.getElementById('clockTime').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            document.getElementById('clockTime').innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
             document.getElementById('clockDate').innerText = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
         }
         setInterval(updateClock, 1000); updateClock();
 
-        // --- COUNTDOWN ---
         function updateCountdown() {
-            const now = new Date();
-            const target = new Date(state.targetDate);
-            const start = new Date(state.startDate);
-            const remaining = target - now;
+            const now = new Date(), target = new Date(state.targetDate), start = new Date(state.startDate);
+            const totalDuration = target - start, elapsed = now - start, remaining = target - now;
+
+            document.getElementById('elapsedDays').innerHTML = `${Math.max(0, Math.floor(elapsed / 86400000))} <span>DAYS</span>`;
+            document.getElementById('remainingDays').innerHTML = `${Math.max(0, Math.floor(remaining / 86400000))} <span>DAYS</span>`;
             
-            if (remaining < 0) {
-                document.getElementById('remainingDays').innerText = "DONE";
-                return;
-            }
-
-            const elapsed = now - start;
-            const total = target - start;
-            const percentage = Math.min(100, Math.max(0, (elapsed / total) * 100));
-
-            document.getElementById('elapsedDays').innerHTML = `${Math.floor(elapsed / (86400000))} <span>DAYS</span>`;
-            document.getElementById('remainingDays').innerHTML = `${Math.floor(remaining / (86400000))} <span>DAYS</span>`;
+            let percentage = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
             document.getElementById('progressBar').style.width = `${percentage}%`;
             document.getElementById('percentTxt').innerText = `${percentage.toFixed(0)}%`;
 
-            document.getElementById('cdMonths').innerText = String(Math.floor(remaining / (86400000 * 30.44))).padStart(2,'0');
-            document.getElementById('cdDays').innerText = String(Math.floor((remaining / 86400000) % 30.44)).padStart(2,'0');
-            document.getElementById('cdHours').innerText = String(Math.floor((remaining / 3600000) % 24)).padStart(2,'0');
-            document.getElementById('cdSecs').innerText = String(Math.floor((remaining / 1000) % 60)).padStart(2,'0');
+            if (remaining > 0) {
+                document.getElementById('cdMonths').innerText = String(Math.floor(remaining / (1000 * 60 * 60 * 24 * 30.44))).padStart(2, '0');
+                document.getElementById('cdDays').innerText = String(Math.floor((remaining / 86400000) % 30.44)).padStart(2, '0');
+                document.getElementById('cdHours').innerText = String(Math.floor((remaining % 86400000) / 3600000)).padStart(2, '0');
+                document.getElementById('cdSecs').innerText = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+            }
         }
         setInterval(updateCountdown, 1000); updateCountdown();
 
-        // --- CALENDAR ---
         let calDate = new Date();
         function renderCalendar() {
             const grid = document.getElementById('calDays');
             grid.innerHTML = "";
-            document.getElementById('calMonth').innerText = calDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-            const firstDay = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay();
-            const daysInMonth = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0).getDate();
-            const adjFirst = firstDay === 0 ? 6 : firstDay - 1;
-
-            for(let i=0; i<adjFirst; i++) grid.appendChild(document.createElement('div'));
+            const year = calDate.getFullYear();
+            const month = calDate.getMonth();
+            const today = new Date();
+            document.getElementById('calMonth').innerText = `${["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][month]} ${year}`;
             
-            for(let i=1; i<=daysInMonth; i++) {
-                const el = document.createElement('div');
-                el.className = 'cal-day';
-                el.innerText = i;
-                const d = new Date(calDate.getFullYear(), calDate.getMonth(), i);
-                const today = new Date(); today.setHours(0,0,0,0);
+            const firstDay = new Date(year, month, 1).getDay();
+            const startPadding = firstDay === 0 ? 6 : firstDay - 1;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < startPadding; i++) grid.appendChild(document.createElement('div'));
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayEl = document.createElement('div');
+                const thisDate = new Date(year, month, i);
+                dayEl.innerText = i;
                 
-                if (d < today) el.classList.add('past');
-                else if (d.getTime() === today.getTime()) el.classList.add('today');
-                else el.classList.add('active');
-                
-                grid.appendChild(el);
+                let className = 'cal-day';
+                if (thisDate < new Date().setHours(0,0,0,0)) className += ' past';
+                else if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) className += ' today';
+                else className += ' active';
+
+                if (currentSelectedDate && currentSelectedDate.getDate() === i && currentSelectedDate.getMonth() === month && currentSelectedDate.getFullYear() === year) {
+                    className += ' selected';
+                }
+
+                dayEl.className = className;
+                if (!className.includes('past')) {
+                    dayEl.onclick = () => selectDate(i, month, year);
+                }
+                grid.appendChild(dayEl);
             }
         }
-        function changeMonth(d) { calDate.setMonth(calDate.getMonth()+d); renderCalendar(); }
+        
+        function selectDate(day, month, year) {
+            currentSelectedDate = new Date(year, month, day);
+            const dateStr = currentSelectedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
+            document.getElementById('selectedDateDisplay').innerText = dateStr;
+            renderCalendar(); 
+        }
+
+        function changeMonth(delta) { calDate.setMonth(calDate.getMonth() + delta); renderCalendar(); }
         renderCalendar();
 
-        // --- TASKS (Updated with Date) ---
+        function toggleSpotify() {
+            const wrapper = document.getElementById('spotifyWrapper');
+            const icon = document.getElementById('deckIcon');
+            if (wrapper.classList.contains('open')) {
+                wrapper.classList.remove('open');
+                icon.className = 'fas fa-caret-down';
+            } else {
+                wrapper.classList.add('open');
+                icon.className = 'fas fa-caret-up';
+                // Only load if not loaded
+                if(document.getElementById('spotifyEmbed').innerHTML.trim() === "") {
+                    loadSpotify();
+                }
+            }
+        }
+        function loadSpotify() {
+            const container = document.getElementById('spotifyEmbed');
+            let id = "", type = "playlist";
+            try {
+                const parts = new URL(state.playlists[state.currentPlaylist]).pathname.split('/');
+                if (parts.length >= 3) { type = parts[1]; id = parts[2]; }
+            } catch (e) {}
+            if(id) container.innerHTML = `<iframe style="border-radius:12px" src="https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+            document.getElementById('playlistToggle').checked = (state.currentPlaylist === 1);
+        }
+        function togglePlaylist() {
+            state.currentPlaylist = document.getElementById('playlistToggle').checked ? 1 : 0;
+            localStorage.setItem('jeeEndgameConfig', JSON.stringify(state));
+            loadSpotify(); 
+        }
+
         function renderTasks() {
             const list = document.getElementById('taskList');
             list.innerHTML = "";
-            let done = 0;
-            
-            // Sort: Not done first, then by date
-            state.tasks.sort((a,b) => (a.done === b.done) ? 0 : a.done ? 1 : -1);
+            state.tasks.sort((a, b) => {
+                if (a.done !== b.done) return a.done ? 1 : -1;
+                const priorityVal = { 'high': 2, 'normal': 1, 'low': 0 };
+                const pA = priorityVal[a.priority || 'normal'];
+                const pB = priorityVal[b.priority || 'normal'];
+                if (pA !== pB) return pB - pA;
+                return new Date(a.date || '9999') - new Date(b.date || '9999');
+            });
 
-            state.tasks.forEach((t, i) => {
-                if(t.done) done++;
+            let doneCount = 0;
+            state.tasks.forEach((task, index) => {
+                if(task.done) doneCount++;
                 const li = document.createElement('li');
-                li.className = `task-item ${t.done ? 'done' : ''}`;
-                
-                // Format date nicely
-                let dateDisplay = "";
-                if(t.date) {
-                    const d = new Date(t.date);
-                    dateDisplay = `<span class="task-date">${d.getDate()} ${d.toLocaleString('default',{month:'short'}).toUpperCase()}</span>`;
+                let prioClass = "";
+                if (task.priority === 'high') prioClass = "priority-high";
+                if (task.priority === 'low') prioClass = "priority-low";
+                li.className = `task-item ${task.done ? 'done' : ''} ${prioClass}`;
+                let dateHtml = "";
+                if(task.date) {
+                    const d = new Date(task.date);
+                    const isLate = new Date() > d && !task.done;
+                    const dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }).toUpperCase();
+                    dateHtml = `<span class="task-deadline" style="color:${isLate ? 'var(--primary-red)' : '#777'}"><i class="far fa-clock"></i> ${dateStr}</span>`;
                 }
-
                 li.innerHTML = `
-                    <div class="task-check" onclick="toggleTask(${i})">${t.done ? '<i class="fas fa-check" style="color:white; font-size:10px;"></i>' : ''}</div>
-                    <span style="flex:1;">${t.text} ${dateDisplay}</span>
-                    <i class="fas fa-times task-del" onclick="delTask(${i})"></i>
-                `;
+                    <div class="task-row-main">
+                        <div class="task-check" onclick="toggleTask(${index})">${task.done ? '<i class="fas fa-check" style="font-size:10px; color:white"></i>' : ''}</div>
+                        <span class="task-text">${task.text}</span>
+                        <i class="fas fa-times task-del" onclick="deleteTask(${index})"></i>
+                    </div>
+                    <div class="task-meta">${dateHtml}</div>`;
                 list.appendChild(li);
             });
-            document.getElementById('taskCount').innerText = `${done}/${state.tasks.length} DONE`;
+            document.getElementById('taskCount').innerText = `${doneCount}/${state.tasks.length}`;
             localStorage.setItem('jeeEndgameConfig', JSON.stringify(state));
         }
 
         function addTask() {
-            const txt = document.getElementById('taskInput').value.trim();
-            const date = document.getElementById('taskDateInput').value;
-            if(!txt) return;
-            state.tasks.push({ text: txt, done: false, date: date });
-            document.getElementById('taskInput').value = "";
-            document.getElementById('taskDateInput').value = ""; // Clear date
-            renderTasks();
+            const input = document.getElementById('taskInput');
+            let text = input.value.trim();
+            if (!text) return;
+            let priority = 'normal';
+            if (text.toUpperCase().includes('(H)')) { priority = 'high'; text = text.replace(/\(H\)/i, '').replace(/\(h\)/, '').trim(); } 
+            else if (text.toUpperCase().includes('(L)')) { priority = 'low'; text = text.replace(/\(L\)/i, '').replace(/\(l\)/, '').trim(); }
+            let taskDate = currentSelectedDate ? currentSelectedDate.toISOString() : null;
+            state.tasks.push({ text: text, done: false, date: taskDate, priority: priority });
+            input.value = ""; renderTasks();
         }
+        
+        document.getElementById('taskInput').addEventListener("keypress", function(event) {
+            if (event.key === "Enter") addTask();
+        });
+
         function toggleTask(i) { state.tasks[i].done = !state.tasks[i].done; renderTasks(); }
-        function delTask(i) { state.tasks.splice(i, 1); renderTasks(); }
-        document.getElementById('taskInput').addEventListener("keypress", (e) => { if(e.key === "Enter") addTask(); });
+        function deleteTask(i) { state.tasks.splice(i, 1); renderTasks(); }
         renderTasks();
 
-        // --- POMODORO (Advanced) ---
-        let timerInt = null;
-        let timeLeft = 25 * 60;
-
-        function displayTime() {
-            const m = Math.floor(timeLeft / 60);
-            const s = timeLeft % 60;
-            document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')} ${String(s).padStart(2,'0')}`;
-        }
-
-        function startTimer() {
-            if(timerInt) return; // Already running
-            timerInt = setInterval(() => {
-                if(timeLeft > 0) {
+        let timerInterval, timeLeft = state.focusDuration * 60, isRunning = false, mode = "focus";
+        function updateTimerDisplay() { document.getElementById('timerDisplay').innerText = `${String(Math.floor(timeLeft / 60)).padStart(2,'0')} ${String(timeLeft % 60).padStart(2,'0')}`; }
+        function toggleTimer() {
+            const btn = document.getElementById('timerBtn');
+            if (isRunning) { clearInterval(timerInterval); btn.innerHTML = '<i class="fas fa-play"></i> RESUME'; }
+            else {
+                timerInterval = setInterval(() => {
                     timeLeft--;
-                    displayTime();
-                } else {
-                    pauseTimer();
-                    alert("SEQUENCE COMPLETE");
-                }
-            }, 1000);
+                    if (timeLeft < 0) {
+                        clearInterval(timerInterval); timeLeft = 0; finishTimer();
+                        btn.innerHTML = '<i class="fas fa-play"></i> START'; isRunning = false;
+                    }
+                    updateTimerDisplay();
+                }, 1000);
+                btn.innerHTML = '<i class="fas fa-pause"></i> PAUSE';
+            }
+            isRunning = !isRunning;
         }
-
-        function pauseTimer() {
-            clearInterval(timerInt);
-            timerInt = null;
+        function finishTimer() {
+            if(mode === "focus") { document.getElementById('soundCock').play().catch(()=>{}); alert("FOCUS COMPLETE. SECTOR CLEAR."); } 
+            else { document.getElementById('soundBell').play().catch(()=>{}); alert("BREAK OVER. BACK TO BASICS."); }
         }
-
-        function setBreak() {
-            pauseTimer();
-            timeLeft = 5 * 60;
-            displayTime();
+        function startBreak() {
+            clearInterval(timerInterval); mode = "break"; timeLeft = state.breakDuration * 60;
+            updateTimerDisplay(); isRunning = false; toggleTimer();
         }
-
         function resetTimer() {
-            pauseTimer();
-            timeLeft = 25 * 60;
-            displayTime();
+            clearInterval(timerInterval); mode = "focus"; isRunning = false;
+            timeLeft = state.focusDuration * 60; updateTimerDisplay();
+            document.getElementById('timerBtn').innerHTML = '<i class="fas fa-play"></i> START';
         }
+        timeLeft = state.focusDuration * 60; updateTimerDisplay();
 
-        // --- SPOTIFY & SYSTEM ---
-        function loadSpotify() {
-            const c = document.getElementById('spotifyEmbed');
-            try {
-                const parts = new URL(state.spotifyUrl).pathname.split('/');
-                if(parts.length >= 3) c.innerHTML = `<iframe style="border-radius:12px" src="https://open.spotify.com/embed/${parts[1]}/${parts[2]}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
-            } catch(e) { c.innerHTML = "<div style='color:#555; text-align:center; padding-top:60px;'>LINK ERROR</div>"; }
-        }
         function openSettings() {
             document.getElementById('settingsModal').style.display = 'flex';
             document.getElementById('confDate').value = state.targetDate.split('T')[0];
-            document.getElementById('confSpotify').value = state.spotifyUrl;
+            document.getElementById('confPlaylist1').value = state.playlists[0];
+            document.getElementById('confPlaylist2').value = state.playlists[1];
+            document.getElementById('confFocusTime').value = state.focusDuration;
+            document.getElementById('confBreakTime').value = state.breakDuration;
         }
         function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
         function saveSettings() {
             state.targetDate = document.getElementById('confDate').value + "T09:00:00";
-            state.spotifyUrl = document.getElementById('confSpotify').value;
-            loadSpotify(); updateCountdown(); closeSettings();
+            state.playlists[0] = document.getElementById('confPlaylist1').value;
+            state.playlists[1] = document.getElementById('confPlaylist2').value;
+            state.focusDuration = parseInt(document.getElementById('confFocusTime').value) || 25;
+            state.breakDuration = parseInt(document.getElementById('confBreakTime').value) || 5;
+            localStorage.setItem('jeeEndgameConfig', JSON.stringify(state));
+            const iframe = document.getElementById('spotifyEmbed').querySelector('iframe');
+            if(!iframe) loadSpotify();
+            updateCountdown(); resetTimer(); closeSettings();
         }
 
-        // Random Quote
-        const q = [
-            "Pain is temporary. <span>Glory is forever.</span>",
-            "Don't stop when you're tired. <span>Stop when you're done.</span>",
-            "Your future needs you. <span>Your past doesn't.</span>",
-            "Padhai kr Bhai,Padhne se hi sb milega Timepass se nhi.</span>",
-            "Discipline is doing what needs to be done, <span>even if you don't want to.</span>"
+        const quotes = [
+            "11th mein 80% barbaad kiya, ab 12th mein bhi fail hoga toh mummy ko kya bolega? <span>Uth ja be saale!</span>",
+            "Tu JEE aspirant hai? Hah, abhi tak syllabus ka 20% bhi nahi khatam, <span>loser banne ka full plan hai kya?</span>",
+            "80% time waste, sapne dekhta raha—ab 12th start, <span>rank 1 laa warna zindagi bhar regret karega!</span>",
+            "Bhai, tu so raha tha jab duniya padh rahi thi? Ab ghabra mat, <span>padhai se ghar nikal!</span>",
+            "Emotional fool, family ke liye JEE crack karna tha na? <span>Abhi tak kya kiya, zero!</span>",
+            "11th khatam, 80% gone—ab 12th mein topper banega ya fir <span>coaching wale ki dukaan saaf karega?</span>",
+            "Gussa aa raha hai? Good! Usi gusse se 12 hours daily padh, <span>JEE tera waiting!</span>",
+            "Tu weak hai, time waste karta hai—ab 12th mein beast ban, <span>sabko dikha de!</span>",
+            "Mummy papa ro rahe honge tujhpe, 80% barbaad—<span>ab unka chehra roshan kar ya sharminda kar!</span>",
+            "JEE 2027? Tu toh abhi bhi basics bhool gaya, idiot! <span>Ab jaa revise kar!</span>",
+            "80% 11th waste, ab 12th mein miracle expect kar raha? <span>Paap nahi milega, mehnat kar!</span>",
+            "Tu dream karta hai IIT ka, lekin padhai se darata hai? <span>Kameen, uth aur lad!</span>",
+            "Emotional blackmail: Bhai-behen ke liye rank laa, <span>warna unke sapne tu hi maar dega!</span>",
+            "12th start ho gaya, abhi tak syllabus zero? <span>Tu toh JEE ka joke ban gaya!</span>",
+            "Ghabra raha hai? Cry baby, ab padh le warna <span>zindagi bhar naukri ke liye tadega!</span>",
+            "80% time phone pe, ab 12th mein book pe—<span>change kar ya regret kar!</span>",
+            "Tu loser mentality ka king hai, JEE winner banne ka time aa gaya—<span>prove it!</span>",
+            "Family ka pressure feel ho raha? Unke aansu ponchh rank se, <span>na ki excuses se!</span>",
+            "11th barbaad, 12th mein bhi aise hi toh <span>ghar baith ke YouTube hero banega!</span>",
+            "Gussa kar, ro le, phir padhai mein josh bhar—<span>JEE tera hai agar tu ladega!</span>",
+            "Tu weak heart wala hai, 80% waste kiya—<span>ab strong ban, top 100 laa!</span>",
+            "12th shuru, syllabus mountain jaise—tu chadhega ya neeche gir jayega, <span>decide kar!</span>",
+            "Emotional hit: Tera future dark hai abhi, <span>JEE se bright kar warna andhera hi rahega!</span>",
+            "Idiot, 11th mein party kiya? <span>Ab 12th mein padhai party shuru kar!</span>",
+            "Tu JEE ka sapna dekhta hai lekin neend hi nahi chhodta—<span>saala, jaag ja!</span>",
+            "80% gone, 20% bacha—usmein pura JEE stuff kar de, <span>hero ban!</span>",
+            "Mummy ke sapne pe thook diya tune, <span>ab 12th mein unko pooja!</span>",
+            "Gussa aa gaya? Perfect, us energy se <span>Physics solve kar nonstop!</span>",
+            "Tu failure ka poster boy hai abhi, <span>success story likh 12th mein!</span>",
+            "11th waste, ab 12th mein beast mode on—<span>warna beast ban ke kha jayega life!</span>",
+            "Emotional roast: Bachpan se IIT bolta tha, ab kya? <span>Excuse master ban gaya?</span>",
+            "12th start, zero prep—<span>tu toh JEE exam dekh ke bhag jayega!</span>",
+            "Weak tu, lazy tu—ab strong warrior ban, <span>JEE battlefield pe jeet!</span>",
+            "Family royi tere liye, tu roya excuses pe—<span>ab padh le saale!</span>",
+            "80% barbaad, ab 100% mehnat—<span>JEE AIR 1 tera naam likh de!</span>",
+            "Tu sochta hai luck se ho jayega? <span>Hah, mehnat se kar dikha!</span>",
+            "12th ka first day, ghabrahat max—use it, <span>padhai start kar abhi!</span>",
+            "Loser tag hatana hai? <span>12th mein padh le jaise kabhi nahi padha!</span>",
+            "Emotional punch: Teri behen ka future bhi tere haath mein, <span>fail mat kar!</span>",
+            "11th mein timepass, ab 12th mein full pass—<span>JEE crack kar!</span>",
+            "Gussa kar raha? Good, usse syllabus khatam kar <span>1 month mein!</span>",
+            "Tu abhi bhi weak hai, JEE strong logon ka—<span>ban ja unme se ek!</span>",
+            "80% waste ka regret? <span>Ab action le, rank laa!</span>",
+            "Mummy papa ke aansu yaad kar, <span>padhai se unko hasa de!</span>",
+            "12th shuru ho gaya, abhi tak plan zero? <span>Idiot, ab bana le!</span>",
+            "Tu JEE aspirant nahi, time-waster hai—<span>change now!</span>",
+            "Zindagi ka turning point 12th hai, <span>miss mat kar!</span>",
+            "Ghabrahat se ro raha? <span>Uth, padh, aur jeet!</span>",
+            "11th barbaad kiya, 12th mein history badal de—<span>topper ban!</span>",
+            "Tu kar sakta hai JEE 2027, lekin sirf agar abhi utha! <span>mehnt kar, padh, jeet!</span>"
         ];
-        document.getElementById('quoteText').innerHTML = q[Math.floor(Math.random()*q.length)];
-
-        loadSpotify();
+        
+        function cycleQuotes() {
+            const el = document.getElementById('quoteText');
+            el.style.opacity = 0; // Fade out
+            setTimeout(() => {
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                el.innerHTML = randomQuote;
+                el.style.opacity = 1; // Fade in
+            }, 500);
+        }
+        
+        // Initial call
+        cycleQuotes();
+        
+        // Change every 4 seconds
+        setInterval(cycleQuotes, 4000);
     </script>
 </body>
 </html>
